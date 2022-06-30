@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread::{self};
 use std::time::Duration;
 use std::vec;
@@ -73,4 +73,56 @@ fn main() {
     for received in rx {
         println!("Got {}", received);
     }
+
+    /*
+        Mutex - or Mutual exclusion
+        allows only one thread to access some data at any given time.
+        To access the data in a mutex, a thread must first signal that it
+        wants access by asking to acquire the mutex’s lock. The lock is
+        a data structure that is part of the mutex that keeps track of who currently
+        has exclusive access to the data. Therefore, the mutex is described as guarding
+        the data it holds via the locking system.
+    */
+
+    let m = Mutex::new(5);
+    {
+        // You must attempt to acquire the lock before using the data.
+        let mut num = m.lock().unwrap();
+        *num = 6; // <-- note the dereference operator which gets a reference to the value (see smart-pointers)
+                  // When you’re done with the data that the mutex guards, you must unlock the data so other threads can acquire the lock.
+                  // here we get that by default as it goes out of scope, using Drop (which is built into the MutexGuard)
+
+        println!("m = {:?}", m);
+    }
+
+    /*
+     Shared state concurrency
+    */
+    // first attempt: Give counter multiple owners by using the smart pointer Rc<T> to create a reference counted value.
+    // Unfortunately, Rc<T> is not safe to share across threads.
+    // When Rc<T> manages the reference count, it adds to the count for each
+    // call to clone and subtracts from the count when each clone is dropped. (but doesn't use any concurrency for performance reasons)
+    // we use the thread-safe Arc (atomic reference counter) instead
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        // clone the lock
+        let counter = Arc::clone(&counter);
+        // create 10 threads
+        let handle = thread::spawn(move || {
+            // aquire lock
+            let mut num = counter.lock().unwrap(); // <---interior mutability
+                                                   // increase deref value
+            *num += 1;
+            // close scope and release lock
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+    // We get a result of 10
+    println!("Result: {}", *counter.lock().unwrap());
 }
