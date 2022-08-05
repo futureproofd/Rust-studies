@@ -29,7 +29,7 @@ impl Post {
 
     // gets a reference to self (Post struct) and call use_ref on the Option
     // (we want a ref, not ownership of the value). Because an Option<&Box<dyn State>> is returned,
-    // we must then call unwrap (see ch.9), followed by the 'content' method implemented on State.
+    // we must then call unwrap (see ch.9) which returns the OK variant, followed by the 'content' method implemented on State.
     // At this point, the deref coercion will take effect, which means the correct content method for the given state object will be called. (See impl State for Published)
     pub fn get_content(&self) -> &str {
         self.state.as_ref().unwrap().content(self)
