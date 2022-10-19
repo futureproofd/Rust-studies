@@ -82,7 +82,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 Rust can’t possibly know which of the two arguments we need, so we need to tell it.
  Because contents is the argument that contains all of our text and we want to return
   the parts of that text that match, we know contents is the argument that should be connected
-   to the return value using the lifetime syntax.
+   to the return value using the lifetime syntax. (see lifetimes examples)
 */
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     // note the functional approach here opposed to the original used below in the case insensitive version
